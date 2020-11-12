@@ -1,0 +1,27 @@
+<launch>
+  <!-- Arguments -->
+  <arg name="launch_rviz" default="true"/>
+  <arg name="move_forward_only" default="true"/>
+
+  <!-- turtlebot_navigation -->
+  <include file="$(find turtlebot3_navigation)/launch/turtlebot3_navigation.launch">
+    <arg name="move_forward_only" value="$(arg move_forward_only)"/>
+    <arg name="open_rviz" value="false"/>
+  </include>
+
+  <!-- rviz -->
+  <group if="$(arg launch_rviz)"> 
+    <node pkg="rviz" type="rviz" name="rviz" required="true"
+          args="-d $(find ros_industrial_training)/rviz/view.rviz"/>
+  </group>
+
+  <node pkg="ar_track_alvar" type="individualMarkersNoKinect" name="ar_track_alvar" respawn="false" output="screen">
+		<param name="marker_size"           type="double" value="9.0" />
+		<param name="max_new_marker_error"  type="double" value="0.08" />
+		<param name="max_track_error"       type="double" value="0.2" />
+		<param name="output_frame"          type="string" value="/base_footprint" />
+
+		<remap from="camera_image"  to="/camera/rgb/image_raw" />
+		<remap from="camera_info"   to="/camera/rgb/camera_info" />
+	</node>
+</launch>
