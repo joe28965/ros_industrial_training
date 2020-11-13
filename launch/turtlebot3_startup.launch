@@ -1,7 +1,7 @@
 <launch>
   <!-- Arguments -->
   <arg name="launch_rviz" default="true"/>
-  <arg name="move_forward_only" default="true"/>
+  <arg name="move_forward_only" default="false"/>
 
   <!-- turtlebot_navigation -->
   <include file="$(find turtlebot3_navigation)/launch/turtlebot3_navigation.launch">
@@ -19,7 +19,7 @@
 		<param name="marker_size"           type="double" value="9.0" />
 		<param name="max_new_marker_error"  type="double" value="0.08" />
 		<param name="max_track_error"       type="double" value="0.2" />
-		<param name="output_frame"          type="string" value="/base_footprint" />
+		<param name="output_frame"          type="string" value="/camera_rgb_optical_frame" />
 
 		<remap from="camera_image"  to="/camera/rgb/image_raw" />
 		<remap from="camera_info"   to="/camera/rgb/camera_info" />
