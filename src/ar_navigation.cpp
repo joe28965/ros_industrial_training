@@ -103,6 +103,7 @@ void ARNavigation::timerCallback(const ros::TimerEvent&)
       }
     }
     catch (tf::TransformException ex){
+      ROS_INFO("No AR tag was seen, so no goal created.");
       ros::Duration(1.0).sleep();
     }
   }
