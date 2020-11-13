@@ -1,0 +1,3 @@
+<launch>
+  <node pkg="ros_industrial_training" type="ar_navigation" name="ar_navigation" respawn="false" output="screen"/>
+</launch>
