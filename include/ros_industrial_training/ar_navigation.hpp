@@ -32,10 +32,13 @@ protected:
   private:
     void visualizationCallback(const visualization_msgs::Marker::ConstPtr& msg);
     void resultCallback(const move_base_msgs::MoveBaseActionResult::ConstPtr& msg);
+    void timerCallback(const ros::TimerEvent&);
+    bool nearGoal(tf::StampedTransform distance);
+    ros::Timer timer_;
     ros::Subscriber subscriber_marker_;
     ros::Subscriber subscriber_goal_;
     ros::Publisher publisher_;
-    visualization_msgs::Marker marker_;
+    std::string tf_name_;
     tf::TransformListener listener_;
     tf::TransformBroadcaster broadcaster_;
     bool goal_send_;
