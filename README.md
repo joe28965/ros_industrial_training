@@ -18,6 +18,24 @@ Start the simulation in the turtlebot world.
 Navigate with default map
 `$ roslaunch turtlebot3_navigation turtlebot3_navigation.launch`
 
+# Slamming
+Perform the following steps in different terminals.
+
+Start a simulation in a house with a Turtlebot
+`roslaunch turtlebot3_gazebo turtlebot3_house.launch`
+
+Start SLAM
+`roslaunch turtlebot3_slam turtlebot3_slam.launch slam_methods:=gmapping`
+
+Drive around with the teleop node
+`roslaunch turtlebot3_teleop turtlebot3_teleop_key.launch`
+
+Once the map is complete (enough), you can safe it with:
+`rosrun map_server map_saver -f ~/map`
+
+Now, we have a map. We can stop the SLAM process and start navigation with the created map
+`roslaunch turtlebot3_navigation turtlebot3_navigation.launch map_file:=$HOME/map.yaml`
+
 # AR Demonstration
 Clone the repository:
 
