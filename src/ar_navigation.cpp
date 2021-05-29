@@ -22,7 +22,7 @@
 ARNavigation::ARNavigation()
 {
   goal_send_ = false;
-  // timer_ = nh_.createTimer(ros::Duration(3), &ARNavigation::timerCallback, this);
+  timer_ = nh_.createTimer(ros::Duration(3), &ARNavigation::timerCallback, this);
   subscriber_marker_ = nh_.subscribe<visualization_msgs::Marker>("/visualization_marker", 10, &ARNavigation::visualizationCallback, this);
   subscriber_goal_ = nh_.subscribe<move_base_msgs::MoveBaseActionResult>("/move_base/result", 10, &ARNavigation::resultCallback, this);
   publisher_ = nh_.advertise<geometry_msgs::PoseStamped>("/move_base_simple/goal", 10);
@@ -34,10 +34,20 @@ void ARNavigation::visualizationCallback(const visualization_msgs::Marker::Const
 
   // start with a transform that moves 0.5m in front of the tag
   tf::Transform marker_to_goal_transform;
+  tf::Vector3 v;
+  v.setValue(0, 0, 0.5);
+  marker_to_goal_transform.setOrigin(v);
+  tf::Quaternion q;
+  q.setValue(0, 0, 0, 1);
+  marker_to_goal_transform.setRotation(q);
 
   // rotate around x axis (pointing the z axis upward)
+  q.setRPY(-M_PI_2, 0, 0);
+  marker_to_goal_transform.setRotation(marker_to_goal_transform.operator*(q));
 
   // rotate around z axis (pointing the x axis toward the tag)
+  q.setRPY(0, 0, M_PI_2);
+  marker_to_goal_transform.setRotation(marker_to_goal_transform.operator*(q));
 
   // broadcast the transform, to see the goal as tf marker
   geometry_msgs::TransformStamped broadcasted;
@@ -61,25 +71,36 @@ void ARNavigation::timerCallback(const ros::TimerEvent&)
     tf::StampedTransform transform;
     try{
       // check location of robot compared to ar_marker_goal
+      listener_.waitForTransform("base_link", "ar_marker_goal", ros::Time(0), ros::Duration(3.0));
+      listener_.lookupTransform("base_link", "ar_marker_goal", ros::Time(0), transform);
+      if(!nearGoal(transform))
+      {
+        // get the transform from our goal to the map
+        listener_.waitForTransform("map", "ar_marker_goal", ros::Time(0), ros::Duration(3.0));
+        listener_.lookupTransform("map", "ar_marker_goal", ros::Time(0), transform);
 
-      // get the transform from our goal to the map
+        // get the RPY and set the roll and pitch to 0
+        tf::Quaternion q = transform.getRotation();
+        double roll, pitch, yaw;
+        tf::Matrix3x3(q).getRPY(roll, pitch, yaw);
+        q.setRPY(0, 0, yaw);
+        transform.setRotation(q);
 
-      // get the RPY and set the roll and pitch to 0
-
-      // convert to posestamped and publish as goal, with frame_id as ar_tag frame (negating need to calculate map -> ar_tag)
-      geometry_msgs::PoseStamped goal;
-      goal.header.frame_id = "map";
-      goal.header.stamp = ros::Time::now();
-      goal.pose.position.x = transform.getOrigin().getX();
-      goal.pose.position.y = transform.getOrigin().getY();
-      goal.pose.position.z = transform.getOrigin().getZ();
-      goal.pose.orientation.x = transform.getRotation().getX();
-      goal.pose.orientation.y = transform.getRotation().getY();
-      goal.pose.orientation.z = transform.getRotation().getZ();
-      goal.pose.orientation.w = transform.getRotation().getW();
-      publisher_.publish(goal);
-      ROS_INFO("Goal send.");
-      goal_send_ = true;
+        // convert to posestamped and publish as goal, with frame_id as ar_tag frame (negating need to calculate map -> ar_tag)
+        geometry_msgs::PoseStamped goal;
+        goal.header.frame_id = "map";
+        goal.header.stamp = ros::Time::now();
+        goal.pose.position.x = transform.getOrigin().getX();
+        goal.pose.position.y = transform.getOrigin().getY();
+        goal.pose.position.z = transform.getOrigin().getZ();
+        goal.pose.orientation.x = transform.getRotation().getX();
+        goal.pose.orientation.y = transform.getRotation().getY();
+        goal.pose.orientation.z = transform.getRotation().getZ();
+        goal.pose.orientation.w = transform.getRotation().getW();
+        publisher_.publish(goal);
+        ROS_INFO("Goal send.");
+        goal_send_ = true;
+      }
     }
     catch (tf::TransformException ex){
       ROS_INFO("No AR tag was seen, so no goal created.");

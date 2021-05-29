@@ -1,5 +1,7 @@
 # ROS Industrial Training
 
+This is the full working version of the Industrial Training.
+
 ## Setup environment for Turtlebot3
 Add the following two lines to `.bashrc`
 
